@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rede Raízes do Nordeste - Cardápio Digital</title>
+    <style>
+        /* ==========================================================================
+           1. ESTILOS GERAIS E RESPONSIVIDADE (MOBILE-FIRST)
+           ========================================================================== */
+        :root {
+            --primary: #1a365d;
+            --secondary: #d69e2e;
+            --background: #f7fafc;
+            --text: #2d3748;
+            --light: #ffffff;
+            --error: #e53e3e;
+            --success: #38a169;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding-bottom: 80px; /* Espaço para a barra do carrinho fixa */
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        header p { font-size: 0.9rem; opacity: 0.9; }
+
+        .container-unidade {
+            margin: 15px auto;
+            max-width: 500px;
+            padding: 0 15px;
+        }
+
+        .container-unidade label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .select-unidade {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            font-size: 1rem;
+        }
+
+        /* Categorias */
+        .categorias {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px 15px;
+            gap: 10px;
+            background: var(--light);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn-categoria {
+            background: #edf2f7;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-categoria.active {
+            background: var(--secondary);
+            color: var(--light);
+        }
+
+        /* Grid do Cardápio */
+        .grid-cardapio {
+            display: grid;
+            grid-template-columns: 1fr; /* Mobile-first: 1 coluna */
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .card-produto {
+            background: var(--light);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-info { padding: 15px; flex: 1; }
+        .card-info h3 { font-size: 1.1rem; margin-bottom: 5px; color: var(--primary); }
+        .card-info p { font-size: 0.85rem; color: #718096; margin-bottom: 10px; }
+        .card-preco { font-weight: bold; color: var(--text); font-size: 1.1rem; }
+
+        .btn-adicionar {
+            width: 100%;
+            background: var(--primary);
+            color: var(--light);
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-adicionar:hover { background: #102a43; }
+
+        /* Checkout Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .modal-conteudo {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-conteudo h2 { margin-bottom: 15px; color: var(--primary); }
+
+        /* Barra de Rodapé Fixa */
+        .barra-carrinho {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--primary);
+            color: var(--light);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-checkout {
+            background: var(--secondary);
+            color: var(--light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Alertas e Status */
+        .alert { padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.9rem; font-weight: 500; }
+        .alert-error { background: #fed7d7; color: var(--error); border: 1px solid #feb2b2; }
+        .alert-success { background: #c6f6d5; color: var(--success); border: 1px solid #9ae6b4; }
+
+        /* Banner LGPD */
+        .banner-lgpd {
+            position: fixed;
+            bottom: 20px; left: 20px; right: 20px;
+            background: #2d3748;
+            color: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .banner-lgpd p { font-size: 0.85rem; line-height: 1.2; text-align: justify; }
+        .btn-lgpd { background: var(--secondary); border: none; padding: 8px 15px; color: var(--light); border-radius: 4px; font-weight: bold; cursor: pointer; align-self: flex-end; }
+
+        .hidden { display: none !important; }
+
+        /* ==========================================================================
+           2. ADAPTAÇÕES DE LAYOUT (MEDIA QUERIES PARA WEB/DESKTOP E TOTEM)
+           ========================================================================== */
+        @media (min-width: 768px) {
+            header h1 { font-size: 2.2rem; }
+            .grid-cardapio { grid-template-columns: repeat(2, 1fr); } /* Web/Totem de Balcão: 2 colunas */
+        }
+
+        @media (min-width: 1024px) {
+            .grid-cardapio { grid-template-columns: repeat(3, 1fr); } /* Desktop: 3 colunas */
+            header { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Rede Raízes do Nordeste 🌾</h1>
+        <p>Tecnologia, Tradição e Escala - Portal Multicanal</p>
+    </header>
+
+    <div class="container-unidade">
+        <label for="unidade">Selecione a Unidade Franqueada:</label>
+        <select id="unidade" class="select-unidade" onchange="carregarCardapio()">
+            <option value="">-- Escolha uma Loja --</option>
+            <option value="recife">Unidade Recife - Centro (Menu Completo)</option>
+            <option value="salvador">Unidade Salvador - Pelourinho (Menu Reduzido)</option>
+            <option value="fortaleza">Unidade Fortaleza - Beira Mar (Sazonal)</option>
+        </select>
+        <div id="aviso-unidade"></div>
+    </div>
+
+    <nav class="categorias">
+        <button class="btn-categoria active" onclick="filtrarCategoria('todos', this)">Todos</button>
+        <button class="btn-categoria" onclick="filtrarCategoria('Comidas', this)">Comidas</button>
+        <button class="btn-categoria" onclick="filtrarCategoria('Bebidas', this)">Bebidas</button>
+        <button class="btn-categoria" onclick="filtrarCategoria('Sobremesas', this)">Sobremesas</button>
+    </nav>
+
+    <main id="cardapio" class="grid-cardapio">
+        </main>
+
+    <div id="barra-carrinho" class="barra-carrinho hidden">
+        <div>
+            <span id="qtd-itens">0</span> item(ns) selecionado(s)
+            <div style="font-weight: bold; font-size: 1.1rem;">Total: R$ <span id="valor-total">0.00</span></div>
+        </div>
+        <button class="btn-checkout" onclick="abrirCheckout()">Fechar Pedido</button>
+    </div>
+
+    <div id="modal-checkout" class="modal">
+        <div class="modal-conteudo">
+            <h2>Resumo e Fechamento do Pedido</h2>
+            <div id="itens-checkout" style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;"></div>
+            
+            <div style="background: #f7fafc; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <p style="font-weight: bold; font-size: 0.9rem; text-indent: 0;">🎁 Programa Raízes Fidelidade</p>
+                <p id="txt-fidelidade" style="font-size: 0.85rem; color: #4a5568; text-indent: 0; margin: 4px 0;">Você possui 15 pontos acumulados.</p>
+                <button id="btn-fidelidade" class="btn-categoria" style="font-size: 0.8rem; background: #e2e8f0;" onclick="aplicarFidelidade()">Resgatar 10 pontos (-R$ 5,00)</button>
+            </div>
+
+            <div id="bloco-pagamento">
+                <label style="display:block; margin-bottom:5px; font-weight:bold; font-size:0.9rem;">Forma de Pagamento Simulada:</label>
+                <select id="forma-pagamento" class="select-unidade" style="margin-bottom: 15px;">
+                    <option value="pix">PIX (Aprovação Imediata)</option>
+                    <option value="cartao-sucesso">Cartão de Crédito (Simular Sucesso)</option>
+                    <option value="cartao-erro">Cartão de Crédito (Simular Recusa/Erro)</option>
+                </select>
+                
+                <div id="feedback-pagamento"></div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-adicionar" style="background:#718096;" onclick="fecharModal()">Voltar</button>
+                    <button id="btn-confirmar-pagamento" class="btn-adicionar" style="background:var(--success);" onclick="processarPagamentoExterno()">Confirmar e Pagar</button>
+                </div>
+            </div>
+
+            <div id="bloco-status" class="hidden">
+                <div class="alert alert-success">✓ Transação Aprovada pelo Provedor Externo!</div>
+                <h4 style="margin: 15px 0 10px 0;">Acompanhe o Status do seu Pedido:</h4>
+                <div id="linha-tempo" style="font-weight: bold; color: var(--primary); padding: 10px; border-left: 4px solid var(--secondary); background: #fefcbf; margin-bottom: 15px;">
+                    ⏳ Pedido Recebido pela Cozinha...
+                </div>
+                <button class="btn-adicionar" onclick="reiniciarSistema()">Novo Pedido / Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="banner-lgpd" class="banner-lgpd">
+        <p>
+            A <strong>Rede Raízes do Nordeste</strong> valoriza a sua privacidade. Utilizamos dados voláteis de navegação para gerenciar seu carrinho e calcular sua pontuação de fidelidade local, em plena conformidade com a <strong>LGPD (Lei nº 13.709/2018)</strong>. Ao prosseguir, você concede seu consentimento ativo.
+        </p>
+        <button class="btn-lgpd" onclick="aceitarLGPD()">Eu Aceito</button>
+    </div>
+
+    <script>
+        // MOCK DATA - Dados simulados conforme exigido pelo roteiro (RF02) [cite: 81, 123]
+        const mockCardapio = [
+            { id: 1, nome: "Tapioca Rendada", categoria: "Comidas", preco: 18.50, desc: "Queijo coalho tostado com carne de sol desfiada.", lojas: ["recife", "salvador", "fortaleza"] },
+            { id: 2, nome: "Cuscuz Recheado", categoria: "Comidas", preco: 15.00, desc: "Cuscuz temperado com bacon, calabresa e manteiga de garrafa.", lojas: ["recife", "fortaleza"] },
+            { id: 3, nome: "Bolo de Rolo (Fatia)", categoria: "Sobremesas", preco: 12.00, desc: "Tradicional pernambucano recheado com goiabada cascão.", lojas: ["recife"] }, // Exclusivo Recife [cite: 370]
+            { id: 4, nome: "Suco de Cajá 400ml", categoria: "Bebidas", preco: 8.50, desc: "Suco natural e refrescante da fruta regional.", lojas: ["recife", "salvador", "fortaleza"] },
+            { id: 5, nome: "Suco de Umbu 400ml", categoria: "Bebidas", preco: 8.50, desc: "Suco polpa nativa do sertão nordestino.", lojas: ["salvador"] } // Exclusivo Salvador [cite: 370]
+        ];
+
+        let carrinho = [];
+        let categoriaAtual = 'todos';
+        let descontoFidelidade = 0;
+
+        // LOGIN / VERIFICAÇÃO INICIAL LGPD (RF01) 
+        window.onload = function() {
+            if(localStorage.getItem('lgpd_aceito') === 'true') {
+                document.getElementById('banner-lgpd').classList.add('hidden');
+            }
+            carregarCardapio();
+        };
+
+        function aceitarLGPD() {
+            localStorage.setItem('lgpd_aceito', 'true');
+            document.getElementById('banner-lgpd').classList.add('hidden');
+        }
+
+        // RENDERIZAÇÃO DO CARDÁPIO POR UNIDADE (RF02) [cite: 81, 84]
+        function carregarCardapio() {
+            const lojaSelecionada = document.getElementById('unidade').value;
+            const container = document.getElementById('cardapio');
+            const aviso = document.getElementById('aviso-unidade');
+            
+            container.innerHTML = "";
+            aviso.innerHTML = "";
+
+            if (!lojaSelecionada) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #718096; padding: 40px 20px;">
+                    ⚠️ Por favor, selecione uma unidade da rede acima para visualizar os itens disponíveis neste local.
+                </div>`;
+                document.getElementById('barra-carrinho').classList.add('hidden');
+                return;
+            }
+
+            // Filtragem Dinâmica usando Mock Data [cite: 81, 123]
+            const itensFiltrados = mockCardapio.filter(item => 
+                item.lojas.includes(lojaSelecionada) && (categoriaAtual === 'todos' || item.categoria === categoriaAtual)
+            );
+
+            if(itensFiltrados.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding:20px;">Nenhum produto encontrado.</p>`;
+                return;
+            }
+
+            itensFiltrados.forEach(produto => {
+                container.innerHTML += `
+                    <div class="card-produto">
+                        <div class="card-info">
+                            <h3>${produto.nome}</h3>
+                            <p>${produto.desc}</p>
+                            <div class="card-preco">R$ ${produto.preco.toFixed(2)}</div>
+                        </div>
+                        <button class="btn-adicionar" onclick="adicionarAoCarrinho(${produto.id})">Adicionar ao Pedido</button>
+                    </div>
+                `;
+            });
+            
+            atualizarBarraCarrinho();
+        }
+
+        function filtrarCategoria(categoria, botao) {
+            categoriaAtual = categoria;
+            document.querySelectorAll('.btn-categoria').forEach(btn => btn.classList.remove('active'));
+            botao.classList.add('active');
+            carregarCardapio();
+        }
+
+        // FLUXO DO CARRINHO (RF03) [cite: 81, 85]
+        function adicionarAoCarrinho(id) {
+            const produto = mockCardapio.find(p => p.id === id);
+            const itemNoCarrinho = carrinho.find(item => item.id === id);
+
+            if (itemNoCarrinho) {
+                itemNoCarrinho.qtd++;
+            } else {
+                carrinho.push({ ...produto, qtd: 1 });
+            }
+            atualizarBarraCarrinho();
+        }
+
+        function atualizarBarraCarrinho() {
+            const barra = document.getElementById('barra-carrinho');
+            if (carrinho.length === 0 || !document.getElementById('unidade').value) {
+                barra.classList.add('hidden');
+                return;
+            }
+
+            barra.classList.remove('hidden');
+            const totalItens = carrinho.reduce((acc, cur) => acc + cur.qtd, 0);
+            const precoTotal = carrinho.reduce((acc, cur) => acc + (cur.preco * cur.qtd), 0) - descontoFidelidade;
+
+            document.getElementById('qtd-itens').innerText = totalItens;
+            document.getElementById('valor-total').innerText = Math.max(0, precoTotal).toFixed(2);
+        }
+
+        // INTERFACE DO PROGRAMA DE FIDELIDADE (RF04) [cite: 81, 87]
+        function aplicarFidelidade() {
+            descontoFidelidade = 5.00;
+            document.getElementById('txt-fidelidade').innerText = "Pontos resgatados com sucesso! Desconto de R$ 5,00 aplicado.";
+            document.getElementById('btn-fidelidade').disabled = true;
+            document.getElementById('btn-fidelidade').style.opacity = "0.5";
+            
+            // Atualiza visualização no resumo do checkout
+            abrirCheckout();
+            atualizarBarraCarrinho();
+        }
+
+        function abrirCheckout() {
+            const modal = document.getElementById('modal-checkout');
+            const containerItens = document.getElementById('itens-checkout');
+            modal.style.display = 'flex';
+
+            containerItens.innerHTML = "<h4>Itens Selecionados:</h4>";
+            carrinho.forEach(item => {
+                containerItens.innerHTML += `<p style="font-size:0.9rem; text-indent:0; margin:5px 0;">
+                    ${item.qtd}x ${item.nome} - R$ ${(item.preco * item.qtd).toFixed(2)}
+                </p>`;
+            });
+
+            const subtotal = carrinho.reduce((acc, cur) => acc + (cur.preco * cur.qtd), 0);
+            containerItens.innerHTML += `<p style="font-weight:bold; margin-top:10px; text-indent:0;">
+                Subtotal: R$ ${subtotal.toFixed(2)} <br>
+                ${descontoFidelidade > 0 ? `Desconto Fidelidade: -R$ ${descontoFidelidade.toFixed(2)}<br>` : ''}
+                <span style="color:var(--primary)">A Pagar: R$ ${Math.max(0, subtotal - descontoFidelidade).toFixed(2)}</span>
+            </p>`;
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-checkout').style.display = 'none';
+        }
+
+        // SIMULAÇÃO DE PAGAMENTO DESACOPLADO (RF06) [cite: 81, 91, 107]
+        function processarPagamentoExterno() {
+            const tipoPagamento = document.getElementById('forma-pagamento').value;
+            const feedback = document.getElementById('feedback-pagamento');
+            const btnPagar = document.getElementById('btn-confirmar-pagamento');
+
+            feedback.innerHTML = `<div class="alert alert-error" style="background:#feebc8; color:#c05621; border-color:#fbd38d;">
+                ⏳ Conectando ao gateway financeiro externo. Aguarde...
+            </div>`;
+            btnPagar.disabled = true;
+
+            // Simula comportamento assíncrono de rede externa de 2 segundos [cite: 107]
+            setTimeout(() => {
+                if(tipoPagamento === 'cartao-erro') {
+                    // Retorno visual de erro simulado [cite: 91, 196]
+                    feedback.innerHTML = `<div class="alert alert-error">
+                        ❌ Transação Recusada pela Operadora: Saldo insuficiente ou dados incorretos.
+                    </div>`;
+                    btnPagar.disabled = false;
+                } else {
+                    // Sucesso na transação externa 
+                    document.getElementById('bloco-pagamento').classList.add('hidden');
+                    document.getElementById('bloco-status').classList.remove('hidden');
+                    dispararAcompanhamentoStatus(); // Inicia monitoramento de tela pós-pedido [cite: 86]
+                }
+            }, 2000);
+        }
+
+        // ACOMPANHAMENTO DE STATUS REAL (RF07) [cite: 81, 86]
+        function dispararAcompanhamentoStatus() {
+            const tracker = document.getElementById('linha-tempo');
+            
+            setTimeout(() => {
+                tracker.innerHTML = "👨‍🍳 Seu pedido está sendo preparado pela nossa cozinha regional...";
+            }, 4000);
+
+            setTimeout(() => {
+                tracker.innerHTML = "✅ Prontinho! Retire seu pedido quente no balcão da unidade.";
+                tracker.style.background = "#c6f6d5";
+                tracker.style.borderColor = "var(--success)";
+            }, 8000);
+        }
+
+        function reiniciarSistema() {
+            carrinho = [];
+            descontoFidelidade = 0;
+            document.getElementById('unidade').value = "";
+            document.getElementById('bloco-pagamento').classList.remove('hidden');
+            document.getElementById('bloco-status').classList.add('hidden');
+            document.getElementById('feedback-pagamento').innerHTML = "";
+            document.getElementById('btn-confirmar-pagamento').disabled = false;
+            
+            // Restaura painel fidelidade
+            document.getElementById('txt-fidelidade').innerText = "Você possui 15 pontos acumulados.";
+            document.getElementById('btn-fidelidade').disabled = false;
+            document.getElementById('btn-fidelidade').style.opacity = "1";
+
+            fecharModal();
+            carregarCardapio();
+        }
+    </script>
+</body>
+</html>
