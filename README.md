@@ -1,7 +1,7 @@
 # 🌾 Cardápio Digital - Rede Raízes do Nordeste
 
 ## 🔗 Links importantes
-* **Clique aqui para testar a página:** [Insira o link do seu GitHub Pages aqui]
+* **Clique aqui para testar a página:** [[Insira o link do seu GitHub Pages aqui]](https://rtavares0.github.io/5014218_Projeto_Front_End/)
 
 ## 📱 O que o sistema faz?
 Mesmo sendo uma página simples e sem banco de dados real, ela simula perfeitamente o funcionamento de um sistema de lanchonete de verdade:
